@@ -1,0 +1,107 @@
+<!--
+   vstupar.html
+   
+   Copyright 2015 Petr Studený <dosmanak@dosbook>
+   
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+   
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+   
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+   MA 02110-1301, USA.
+   
+   
+-->
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+	<title>Vstupařův průvodce večerem</title>
+	<meta http-equiv="content-type" content="text/html;charset=utf-8" />
+	<script type="text/javascript">
+		function setCookie(name, value, days)
+		{
+		  if (days)
+		  {
+			var date = new Date();
+			date.setTime(date.getTime()+days*24*60*60*1000); 
+			var expires = "; expires=" + date.toGMTString();
+		  }
+		  else
+			var expires = "";
+		  document.cookie = name+"=" + value+expires + ";path=/"; 
+		}
+		function getCookie(cname) {
+			var name = cname + "=";
+			var ca = document.cookie.split(';');
+			for(var i=0; i<ca.length; i++) {
+				var c = ca[i];
+				while (c.charAt(0)==' ') c = c.substring(1);
+				if (c.indexOf(name) == 0) return c.substring(name.length,c.length);
+			}
+			return "";
+		}
+
+		function drawTable(variants){
+			feeTable = "<table>";
+			for (r=0; r<variants; r++){
+				/* feeTable += "<tr><td>cena</td><td>-2</td><td>-1</td><td>+1</td><td>+2</td><td>+5</td></tr>"; */
+				feeTable += '<tr><td><input type="text" id="price'+r+'" value="'+50*r+'"/></td>';
+				feeTable += '<td><input type="button" id="sub2but'+r+'" value="-2" onClick="changeValBut('+r+',-2)"/></td>';
+				feeTable += '<td><input type="button" id="sub1but'+r+'" value="-1" onClick="changeValBut('+r+',-1)"/></td>';
+				feeTable += '<td><input type="button" id="add1but'+r+'" value="+1" onClick="changeValBut('+r+',+1)"/></td>';
+				feeTable += '<td><input type="button" id="add2but'+r+'" value="+2" onClick="changeValBut('+r+',+2)"/></td>';
+				feeTable += '<td><input type="button" id="add5but'+r+'" value="+5" onClick="changeValBut('+r+',+5)"/></td>';
+				feeTable += '<td><span id="count'+r+'">0</span></td>';
+				feeTable += '<td><span id="sumPrice'+r+'">0</span></td>';
+				console.log("Processing row "+r);
+			}
+			feeTable += "</table>";
+			console.log(feeTable);
+			document.getElementById("main").innerHTML = feeTable;
+			
+			/* fill from cookie */
+			price = getCookie("price"+row);
+			count = getCookie("count"+row);
+			document.getElementById("price"+row).value = price
+			document.getElementById("count"+row).innerHTML = count
+			if ( (price != null) && (count != null) ){
+				document.getElementById("sumPrice"+row).innerHTML = price*count;
+			}
+			else{
+				document.getElementById("sumPrice"+row).innerHTML = 0;
+			}
+			
+		}
+		function changeValBut(row,val){
+			price = document.getElementById("price"+row).value;
+			count = parseInt(document.getElementById("count"+row).innerHTML);
+			sumPrice = parseInt(document.getElementById("sumPrice"+row).innerHTML); 
+			count += val;
+			setCookie("price"+row,price,2);
+			setCookie("count"+row,count,2); // 2 days valid
+			sumPrice = count*price;
+			console.log(row,count,sumPrice);
+			document.getElementById("count"+row).innerHTML = count;
+			document.getElementById("sumPrice"+row).innerHTML = sumPrice;
+			console.log("Cookie:"+document.cookie);
+		}
+
+	</script>
+</head>
+
+<body id="main" onLoad="drawTable(7)">
+	
+</body>
+
+</html>
