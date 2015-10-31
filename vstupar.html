@@ -29,78 +29,123 @@
 	<title>Vstupařův průvodce večerem</title>
 	<meta http-equiv="content-type" content="text/html;charset=utf-8" />
 	<script type="text/javascript">
-		function setCookie(name, value, days)
-		{
-		  if (days)
-		  {
-			var date = new Date();
-			date.setTime(date.getTime()+days*24*60*60*1000); 
-			var expires = "; expires=" + date.toGMTString();
-		  }
-		  else
-			var expires = "";
-		  document.cookie = name+"=" + value+expires + ";path=/"; 
-		}
-		function getCookie(cname) {
-			var name = cname + "=";
-			var ca = document.cookie.split(';');
-			for(var i=0; i<ca.length; i++) {
-				var c = ca[i];
-				while (c.charAt(0)==' ') c = c.substring(1);
-				if (c.indexOf(name) == 0) return c.substring(name.length,c.length);
-			}
-			return "";
-		}
+	function setCookie(name, value)
+	{
+		/* dont ask for expiration in argument, use fiex value */
+		days = 2
+		var date = new Date();
+		date.setTime(date.getTime()+days*24*60*60*1000); 
+		var expires = "; expires=" + date.toGMTString();
+		document.cookie = name+"=" + value+expires + ";path=/"; 
+	}
+	function getCookie(cname) {
+					var name = cname + "=";
+					var ca = document.cookie.split(';');
+					for(var i=0; i<ca.length; i++) {
+									var c = ca[i];
+									while (c.charAt(0)==' ') c = c.substring(1);
+									if (c.indexOf(name) == 0) return c.substring(name.length,c.length);
+					}
+					return 0;
+	}
 
-		function drawTable(variants){
-			feeTable = "<table>";
-			for (r=0; r<variants; r++){
-				/* feeTable += "<tr><td>cena</td><td>-2</td><td>-1</td><td>+1</td><td>+2</td><td>+5</td></tr>"; */
-				feeTable += '<tr><td><input type="text" id="price'+r+'" value="'+50*r+'"/></td>';
-				feeTable += '<td><input type="button" id="sub2but'+r+'" value="-2" onClick="changeValBut('+r+',-2)"/></td>';
-				feeTable += '<td><input type="button" id="sub1but'+r+'" value="-1" onClick="changeValBut('+r+',-1)"/></td>';
-				feeTable += '<td><input type="button" id="add1but'+r+'" value="+1" onClick="changeValBut('+r+',+1)"/></td>';
-				feeTable += '<td><input type="button" id="add2but'+r+'" value="+2" onClick="changeValBut('+r+',+2)"/></td>';
-				feeTable += '<td><input type="button" id="add5but'+r+'" value="+5" onClick="changeValBut('+r+',+5)"/></td>';
-				feeTable += '<td><span id="count'+r+'">0</span></td>';
-				feeTable += '<td><span id="sumPrice'+r+'">0</span></td>';
-				console.log("Processing row "+r);
-			}
-			feeTable += "</table>";
-			console.log(feeTable);
-			document.getElementById("main").innerHTML = feeTable;
-			
-			/* fill from cookie */
-			price = getCookie("price"+row);
-			count = getCookie("count"+row);
-			document.getElementById("price"+row).value = price
-			document.getElementById("count"+row).innerHTML = count
-			if ( (price != null) && (count != null) ){
-				document.getElementById("sumPrice"+row).innerHTML = price*count;
-			}
-			else{
-				document.getElementById("sumPrice"+row).innerHTML = 0;
-			}
-			
+	function evening()
+	{
+		document.write("<div id=prvni></div>");
+		c1 = Concert("prvni",7);
+	}
+
+	/***
+	** Object concert:
+	** one concert must have variables:
+	**   name string
+	**   rows integer
+	**   price[rows] array of integers
+	**   count[rows] array of integers
+	** one concert must have methods:
+	**   sumPrice(row)
+	**   changeValBut(row, val)
+	** one concert mauste have constructor
+	**   new Concert(name,rows) - draw table with buttons and correct variables in it.
+	**     create one concert with given name and rows.
+	***/
+	function Concert(_name,_rows)
+	{
+		this.name = _name;
+		this.rows = _rows;
+		this.price = new Array(this.rows).fill(0);
+		this.count = new Array(this.rows).fill(0);
+		this.setPrice = function(row, price)
+		{
+			if (isNaN(price)) { alert ("wrong call to setPrice"); return;};
+			this.price[row] = price;
+			document.getElementById(this.name+"-price"+row).value = price;
+			document.getElementById(this.name+"-sumPrice"+row).innerHTML = this.sumPrice(row)
+			setCookie(this.name+"-price"+row, price);
 		}
-		function changeValBut(row,val){
-			price = document.getElementById("price"+row).value;
-			count = parseInt(document.getElementById("count"+row).innerHTML);
-			sumPrice = parseInt(document.getElementById("sumPrice"+row).innerHTML); 
-			count += val;
-			setCookie("price"+row,price,2);
-			setCookie("count"+row,count,2); // 2 days valid
-			sumPrice = count*price;
-			console.log(row,count,sumPrice);
-			document.getElementById("count"+row).innerHTML = count;
-			document.getElementById("sumPrice"+row).innerHTML = sumPrice;
+		this.setCount = function(row, count)
+		{
+			if (isNaN(count)) { alert ("wrong call to setCount"); return;};
+			this.count[row] = count;
+			document.getElementById(this.name+"-count"+row).innerHTML = this.count[row];
+			document.getElementById(this.name+"-sumPrice"+row).innerHTML = this.sumPrice(row)
+			setCookie(this.name+"-count"+row, count);
+		}
+		this.sumPrice = function(row)
+		{
+			return this.price[row]*this.count[row];
+		}
+		this.totalPrice = function()
+		{
+			totalPrice = 0;
+			for (i=0;i<this.rows;i++)
+			{
+				totalPrice += sumPrice(row);
+			}
+			return totalPrice;
+		}
+		this.changeValBut = function(row,val){
+			this.setCount(this.count + val);
+			console.log(row,this.count,this.sumPrice);
 			console.log("Cookie:"+document.cookie);
 		}
+		this.drawTable = function()
+		{
+			title = "<h2>"+this.name+"</h2>";
+			feeTable = "<table>";
+			for (r=0; r < this.rows; r++){
+				/* feeTable += "<tr><td>cena</td><td>-2</td><td>-1</td><td>+1</td><td>+2</td><td>+5</td></tr>"; */
+				feeTable += '<tr><td><input type="text" id="'+this.name+'-price'+r+'" value="'+this.price[r]+'"/></td>';
+				feeTable += '<td><input type="button" id="sub2but'+r+'" value="-2" onClick="this.changeValBut('+r+',-2)"/></td>';
+				feeTable += '<td><input type="button" id="sub1but'+r+'" value="-1" onClick="this.changeValBut('+r+',-1)"/></td>';
+				feeTable += '<td><input type="button" id="add1but'+r+'" value="+1" onClick="this.changeValBut('+r+',+1)"/></td>';
+				feeTable += '<td><input type="button" id="add2but'+r+'" value="+2" onClick="this.changeValBut('+r+',+2)"/></td>';
+				feeTable += '<td><input type="button" id="add5but'+r+'" value="+5" onClick="this.changeValBut('+r+',+5)"/></td>';
+				feeTable += '<td><span id="'+this.name+'-count'+r+'">'+this.count[r]+'</span></td>';
+				feeTable += '<td><span id="'+this.name+'-sumPrice'+r+'">'+this.sumPrice(r)+'</span></td></tr>';
+				console.log("Processing row "+r);
+				
+			}
+			feeTable += "</table>";
+			document.getElementById(this.name).innerHTML = title+feeTable;
+			
+			/* fill from cookie */
+			for (r=0; r < this.rows; r++){
+				priceRow = getCookie(this.name+"-price"+r)
+				if (priceRow == 0) { priceRow = 50*r; }
+				this.setPrice(r,priceRow);
+				this.setCount(r,getCookie(this.name+"-count"+r));
+			}
+			
+		}
+		//* initialization complete, now do something *//
+		this.drawTable();
+	}
 
 	</script>
 </head>
 
-<body id="main" onLoad="drawTable(7)">
+<body id="main" onLoad="evening()">
 	
 </body>
 
