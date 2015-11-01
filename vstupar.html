@@ -51,8 +51,9 @@
 
 	function evening()
 	{
-		document.write("<div id=prvni></div>");
-		c1 = Concert("prvni",7);
+		document.write("<div id=prvni></div><div id=druhy></div>");
+		c1 = new Concert("prvni",7);
+		c2 = new Concert("druhy",3);
 	}
 
 	/***
@@ -79,8 +80,11 @@
 		{
 			if (isNaN(price)) { alert ("wrong call to setPrice"); return;};
 			this.price[row] = price;
+			//console.log(this.name+"-price"+row);
+			//console.log(document.getElementById(this.name+"-price"+row));
 			document.getElementById(this.name+"-price"+row).value = price;
-			document.getElementById(this.name+"-sumPrice"+row).innerHTML = this.sumPrice(row)
+			document.getElementById(this.name+"-sumPrice"+row).innerHTML = this.sumPrice(row);
+			document.getElementById(this.name+"-totalPrice").innerHTML = this.getTotalPrice();
 			setCookie(this.name+"-price"+row, price);
 		}
 		this.setCount = function(row, count)
@@ -88,53 +92,96 @@
 			if (isNaN(count)) { alert ("wrong call to setCount"); return;};
 			this.count[row] = count;
 			document.getElementById(this.name+"-count"+row).innerHTML = this.count[row];
-			document.getElementById(this.name+"-sumPrice"+row).innerHTML = this.sumPrice(row)
+			document.getElementById(this.name+"-sumPrice"+row).innerHTML = this.sumPrice(row);
+			document.getElementById(this.name+"-totalPrice").innerHTML = this.getTotalPrice();
 			setCookie(this.name+"-count"+row, count);
 		}
 		this.sumPrice = function(row)
 		{
 			return this.price[row]*this.count[row];
 		}
-		this.totalPrice = function()
+		this.getTotalPrice = function()
 		{
 			totalPrice = 0;
 			for (i=0;i<this.rows;i++)
 			{
-				totalPrice += sumPrice(row);
+				totalPrice += this.sumPrice(i);
 			}
 			return totalPrice;
+			
 		}
 		this.changeValBut = function(row,val){
-			this.setCount(this.count + val);
-			console.log(row,this.count,this.sumPrice);
-			console.log("Cookie:"+document.cookie);
+			this.setCount(row,this.count[row] + val);
+		}
+		this.drawButton = function(row,val)
+		{
+			input = document.createElement("input");
+			input.type = "button";
+			input.class = "modifier";
+			input.id = row+this.name+val;
+			label = val.toString();
+			if (label.charAt(0) != "-") { label = "+"+label; };
+			input.value = label;
+			console.log("this, pri incializaci buttonu: ",this.name);
+			input.onclick = () => this.changeValBut(row,val);
+			return input;
 		}
 		this.drawTable = function()
 		{
-			title = "<h2>"+this.name+"</h2>";
-			feeTable = "<table>";
+			title = document.createElement("h2")
+			title.innerHTML = this.name;
+			feeTable = document.createElement("table");
+			th = feeTable.insertRow();
+			hprice = th.insertCell();
+			hprice.innerHTML = "<b>Cena</b>";
+			for (c=0; c < 5; c++){th.insertCell();};
+			hcount = th.insertCell();
+			hcount.innerHTML = "<b>Počet</b>";
+			hsumPrice = th.insertCell();
+			hsumPrice.innerHTML = "<b>Součet</b>";
 			for (r=0; r < this.rows; r++){
-				/* feeTable += "<tr><td>cena</td><td>-2</td><td>-1</td><td>+1</td><td>+2</td><td>+5</td></tr>"; */
-				feeTable += '<tr><td><input type="text" id="'+this.name+'-price'+r+'" value="'+this.price[r]+'"/></td>';
-				feeTable += '<td><input type="button" id="sub2but'+r+'" value="-2" onClick="this.changeValBut('+r+',-2)"/></td>';
-				feeTable += '<td><input type="button" id="sub1but'+r+'" value="-1" onClick="this.changeValBut('+r+',-1)"/></td>';
-				feeTable += '<td><input type="button" id="add1but'+r+'" value="+1" onClick="this.changeValBut('+r+',+1)"/></td>';
-				feeTable += '<td><input type="button" id="add2but'+r+'" value="+2" onClick="this.changeValBut('+r+',+2)"/></td>';
-				feeTable += '<td><input type="button" id="add5but'+r+'" value="+5" onClick="this.changeValBut('+r+',+5)"/></td>';
-				feeTable += '<td><span id="'+this.name+'-count'+r+'">'+this.count[r]+'</span></td>';
-				feeTable += '<td><span id="'+this.name+'-sumPrice'+r+'">'+this.sumPrice(r)+'</span></td></tr>';
+				tr = feeTable.insertRow();
+				priceCell = tr.insertCell();
+				priceCellInput = document.createElement("input");
+				priceCellInput.type = "text";
+				priceCellInput.id = this.name+"-price"+r;
+				priceCellInput.value = this.price[r];
+				priceCellInput.size = 4;
+				console.log("init: ",r);
+				//this.r = r;				
+				var that = this;
+				priceCellInput.onblur = function(){
+					roww = this.id.replace(/\D*/, "");
+					that.setPrice(roww, this.value);
+				}
+				//priceCellInput.onblur = () => this.setPrice(r, priceCellInput.value);
+				priceCell.appendChild(priceCellInput);
+				tr.insertCell().appendChild(this.drawButton(r,-2));
+				tr.insertCell().appendChild(this.drawButton(r,-1));
+				tr.insertCell().appendChild(this.drawButton(r,+1));
+				tr.insertCell().appendChild(this.drawButton(r,+4));
+				tr.insertCell().appendChild(this.drawButton(r,+6));
+				countCell = tr.insertCell();
+				countCell.id = this.name+"-count"+r;
+				countCell.innertHTML = this.count[r];
+				sumPriceCell = tr.insertCell();
+				sumPriceCell.id = this.name+"-sumPrice"+r;
+				sumPriceCell.innerHTML = this.sumPrice(r);
 				console.log("Processing row "+r);
-				
 			}
-			feeTable += "</table>";
-			document.getElementById(this.name).innerHTML = title+feeTable;
+			sumTotaltr = feeTable.insertRow();
+			sumTotaltr.innerHTML='<td></td><td></td><td></td><td></td><td></td><td></td><td>Total:</td><td id="'+this.name+'-totalPrice">0</td>';
+			
+			document.getElementById(this.name).appendChild(title);
+			document.getElementById(this.name).appendChild(feeTable);
+			
 			
 			/* fill from cookie */
 			for (r=0; r < this.rows; r++){
-				priceRow = getCookie(this.name+"-price"+r)
+				priceRow = parseInt(getCookie(this.name+"-price"+r));
 				if (priceRow == 0) { priceRow = 50*r; }
 				this.setPrice(r,priceRow);
-				this.setCount(r,getCookie(this.name+"-count"+r));
+				this.setCount(r,parseInt(getCookie(this.name+"-count"+r)));
 			}
 			
 		}
