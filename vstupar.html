@@ -28,12 +28,12 @@
 <head>
 	<title>Vstupařův průvodce večerem</title>
 	<meta http-equiv="content-type" content="text/html;charset=utf-8" />
-	<meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
+	<meta content='width=device-width, initial-scale=0.7, maximum-scale=0.9, user-scalable=0' name='viewport' />
 	<style>
 		body { font-family: Helvetica }
 		#concerts { padding: 2%; }
-		#concerts table { width: 100%; font-size: 150%}
-		.tableHeader {font-size: 70% }
+		#concerts table { width: 100%; font-size: 230%; table-layout: fixed}
+		.tableHeader {font-size: 60% }
 		#concerts tr { line-height: 200%; margin: 50px;}
 		#concerts td { width: 15% }
 		.priceCol { height: 80%; width: 90%; font-size: 60%}
@@ -47,7 +47,7 @@
 	<script type="text/javascript">
 	function setCookie(name, value)
 	{
-		/* dont ask for expiration in argument, use fiex value */
+		/* dont ask for expiration in argument, use fix value */
 		days = 2
 		var date = new Date();
 		date.setTime(date.getTime()+days*24*60*60*1000); 
@@ -104,7 +104,7 @@
 		newButton = document.createElement("input");
 		newButton.type = "button";
 		newButton.value = "Přidej";
-		newButton.onclick = () => new Concert();
+    newButton.onclick = function() { new Concert() };
 	}
 
 	function createConcert()
@@ -140,8 +140,12 @@
 		this.title = _name;
 		this.name = slugify(_name);
 		this.rows = _rows;
-		this.price = new Array(this.rows).fill(0);
-		this.count = new Array(this.rows).fill(0);
+		this.price = new Array(this.rows);
+		this.count = new Array(this.rows);
+    for (var i=0; i < this.rows; i++) {
+      this.price[i]=0;
+      this.count[i]=0;
+    }
 		this.setPrice = function(row, price)
 		{
 			if (isNaN(price)) { alert ("wrong call to setPrice"); return;};
@@ -169,8 +173,8 @@
 		}
 		this.getTotalPrice = function()
 		{
-			totalPrice = 0;
-			for (i=0;i<this.rows;i++)
+			var totalPrice = 0;
+			for (var i=0;i<this.rows;i++)
 			{
 				totalPrice += this.sumPrice(i);
 			}
@@ -179,8 +183,8 @@
 		
 		this.getTotalCount = function()
 		{
-			totalCount = 0;
-			for (i=0;i<this.rows;i++)
+			var totalCount = 0;
+			for (var i=0;i<this.rows;i++)
 			{
 				totalCount += this.count[i];
 			}
@@ -192,38 +196,45 @@
 		}
 		this.drawButton = function(row,val)
 		{
-			input = document.createElement("input");
+			var input = document.createElement("input");
 			input.type = "button";
 			input.id = row+this.name+val;
-			label = val.toString();
+			var label = val.toString();
 			if (label.charAt(0) != "-") { label = "+"+label; };
 			input.className = "modifier modifier"+val;
 			input.value = label;
 			//console.log("this, pri incializaci buttonu: ",this.name);
-			input.onclick = () => this.changeValBut(row,val);
+			var that = this;
+			input.onclick = function() { that.changeValBut(row,val); }
 			return input;
 		}
 		this.drawTable = function()
 		{
-			envelope = document.createElement("div");
+			var envelope = document.createElement("div");
 			envelope.id = this.name;
-			title = document.createElement("h2")
+			var title = document.createElement("h2")
 			title.innerHTML = this.title;
-			feeTable = document.createElement("table");
-			th = feeTable.insertRow();
+			var feeTable = document.createElement("table");
+			var th = feeTable.insertRow(-1);
 			th.className = "tableHeader";
-			hprice = th.insertCell();
-			hprice.innerHTML = "<b>Cena</b>";
-			for (c=0; c < 5; c++){th.insertCell();};
-			hcount = th.insertCell();
+			var hcount = th.insertCell(-1);
 			hcount.innerHTML = "<b>Počet</b>";
-			hsumPrice = th.insertCell();
+			var hsumPrice = th.insertCell(-1);
 			hsumPrice.innerHTML = "<b>Součet</b>";
+			var hprice = th.insertCell(-1);
+			hprice.innerHTML = "<b>Cena</b>";
+			for (c=0; c < 4; c++){th.insertCell(-1);};
 			for (r=0; r < this.rows; r++){
-				tr = feeTable.insertRow();
-				priceCell = tr.insertCell();
-				priceCellInput = document.createElement("input");
-				priceCellInput.type = "text";
+				var tr = feeTable.insertRow(-1);
+				var countCell = tr.insertCell(-1);
+				countCell.id = this.name+"-count"+r;
+				countCell.innertHTML = this.count[r];
+				var sumPriceCell = tr.insertCell(-1);
+				sumPriceCell.id = this.name+"-sumPrice"+r;
+				sumPriceCell.innerHTML = this.sumPrice(r);
+				var priceCell = tr.insertCell(-1);
+				var priceCellInput = document.createElement("input");
+				priceCellInput.type = "number";
 				priceCellInput.id = this.name+"-price"+r;
 				priceCellInput.className = "priceCol";
 				priceCellInput.value = this.price[r];
@@ -237,22 +248,16 @@
 				}
 				//priceCellInput.onblur = () => this.setPrice(r, priceCellInput.value);
 				priceCell.appendChild(priceCellInput);
-				tr.insertCell().appendChild(this.drawButton(r,-2));
-				tr.insertCell().appendChild(this.drawButton(r,-1));
-				tr.insertCell().appendChild(this.drawButton(r,+1));
-				tr.insertCell().appendChild(this.drawButton(r,+4));
-				tr.insertCell().appendChild(this.drawButton(r,+6));
-				countCell = tr.insertCell();
-				countCell.id = this.name+"-count"+r;
-				countCell.innertHTML = this.count[r];
-				sumPriceCell = tr.insertCell();
-				sumPriceCell.id = this.name+"-sumPrice"+r;
-				sumPriceCell.innerHTML = this.sumPrice(r);
+				//tr.insertCell(-1).appendChild(this.drawButton(r,-2));
+				tr.insertCell(-1).appendChild(this.drawButton(r,-1));
+				tr.insertCell(-1).appendChild(this.drawButton(r,+1));
+				tr.insertCell(-1).appendChild(this.drawButton(r,+2));
+				tr.insertCell(-1).appendChild(this.drawButton(r,+4));
 				console.log("Processing row "+r);
 			}
-			sumTotaltr = feeTable.insertRow();
-			sumTotaltr.innerHTML='<td colspan="6" align="right">Total:</td>\
-			<td id="'+this.name+'-totalCount">0</td><td id="'+this.name+'-totalPrice">0</td>';
+			var sumTotaltr = feeTable.insertRow(-1);
+			sumTotaltr.innerHTML='<td id="'+this.name+'-totalCount">0</td>\
+			<td id="'+this.name+'-totalPrice">0</td><td colspan="5">⇐Celkem</td>';
 			
 			envelope.appendChild(title);
 			envelope.appendChild(feeTable);
@@ -263,7 +268,7 @@
 		{
 			/* fill from cookie */
 			for (r=0; r < this.rows; r++){
-				priceRow = parseInt(getCookie(this.name+"-price"+r));
+				var priceRow = parseInt(getCookie(this.name+"-price"+r));
 				if (priceRow == 0) { priceRow = 50*r; }
 				this.setPrice(r,priceRow);
 				this.setCount(r,parseInt(getCookie(this.name+"-count"+r)));
