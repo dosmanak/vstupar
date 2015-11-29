@@ -28,6 +28,22 @@
 <head>
 	<title>Vstupařův průvodce večerem</title>
 	<meta http-equiv="content-type" content="text/html;charset=utf-8" />
+	<meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
+	<style>
+		body { font-family: Helvetica }
+		#concerts { padding: 2%; }
+		#concerts table { width: 100%; font-size: 150%}
+		.tableHeader {font-size: 70% }
+		#concerts tr { line-height: 200%; margin: 50px;}
+		#concerts td { width: 15% }
+		.priceCol { height: 80%; width: 90%; font-size: 60%}
+		.modifier { height: 100%; width: 100%; font-size: 60%}
+		/*
+		.modifier-2 { background-color: red}
+		.modifier6 { background-color: green}
+		*/
+		#eraser input{ font-size: 150%; line-height: 150% }
+	</style>
 	<script type="text/javascript">
 	function setCookie(name, value)
 	{
@@ -178,10 +194,10 @@
 		{
 			input = document.createElement("input");
 			input.type = "button";
-			input.class = "modifier";
 			input.id = row+this.name+val;
 			label = val.toString();
 			if (label.charAt(0) != "-") { label = "+"+label; };
+			input.className = "modifier modifier"+val;
 			input.value = label;
 			//console.log("this, pri incializaci buttonu: ",this.name);
 			input.onclick = () => this.changeValBut(row,val);
@@ -195,6 +211,7 @@
 			title.innerHTML = this.title;
 			feeTable = document.createElement("table");
 			th = feeTable.insertRow();
+			th.className = "tableHeader";
 			hprice = th.insertCell();
 			hprice.innerHTML = "<b>Cena</b>";
 			for (c=0; c < 5; c++){th.insertCell();};
@@ -208,6 +225,7 @@
 				priceCellInput = document.createElement("input");
 				priceCellInput.type = "text";
 				priceCellInput.id = this.name+"-price"+r;
+				priceCellInput.className = "priceCol";
 				priceCellInput.value = this.price[r];
 				priceCellInput.size = 4;
 				console.log("init: ",r);
@@ -233,7 +251,7 @@
 				console.log("Processing row "+r);
 			}
 			sumTotaltr = feeTable.insertRow();
-			sumTotaltr.innerHTML='<td colspan="5"></td><td>Total:</td>\
+			sumTotaltr.innerHTML='<td colspan="6" align="right">Total:</td>\
 			<td id="'+this.name+'-totalCount">0</td><td id="'+this.name+'-totalPrice">0</td>';
 			
 			envelope.appendChild(title);
