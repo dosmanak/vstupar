@@ -1,5 +1,5 @@
 <!--
-   vstupar.html
+   vstupar.php
    
    Copyright 2015 Petr Studený <dosmanak@dosbook>
    
@@ -109,16 +109,43 @@
 
 	function createConcert()
 	{
+		var data = 'data={';
 		concerts = document.getElementById("concerts");
 		c1 = new Concert("První",5);
 		concerts.appendChild(c1.drawTable());
-		c1.loadCookies();		
+		c1.loadCookies();	
+		data += c1.jsonify();
 		c2 = new Concert("Druhý",5);
 		concerts.appendChild(c2.drawTable());
 		c2.loadCookies();
+		data += ','+c2.jsonify();
 		c3 = new Concert("Special",3);
 		concerts.appendChild(c3.drawTable());		
 		c3.loadCookies();
+		data += ','+c3.jsonify();
+		data += '}';
+
+		send = document.createElement("input");
+		send.type = "button";
+		send.class = "SendMail";
+		send.onclick = function () { sendConcertsData(data); };
+		send.value = "Odeslat e-mail";
+		concerts.appendChild(send);
+
+		
+	}
+
+	function sendConcertsData(data)
+	{
+		var xhttp = new XMLHttpRequest();
+		xhttp.open("POST", "vstupar.php", true);
+		xhttp.onreadystatechange = function() {
+			if (xhttp.readyState == 4 && xhttp.status == 200) {
+				document.write(xhttp.responseText);
+			}
+		}
+		xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+		xhttp.send(data);
 	}
 
 	/***
@@ -212,7 +239,8 @@
 		{
 			var envelope = document.createElement("div");
 			envelope.id = this.name;
-			var title = document.createElement("h2")
+			var title = document.createElement("h2");
+			title.name = this.title;
 			title.innerHTML = this.title;
 			var feeTable = document.createElement("table");
 			var th = feeTable.insertRow(-1);
@@ -228,6 +256,7 @@
 				var tr = feeTable.insertRow(-1);
 				var countCell = tr.insertCell(-1);
 				countCell.id = this.name+"-count"+r;
+				countCell.name = this.name+"-count"+r;
 				countCell.innertHTML = this.count[r];
 				var sumPriceCell = tr.insertCell(-1);
 				sumPriceCell.id = this.name+"-sumPrice"+r;
@@ -236,6 +265,7 @@
 				var priceCellInput = document.createElement("input");
 				priceCellInput.type = "number";
 				priceCellInput.id = this.name+"-price"+r;
+				priceCellInput.name = this.name+"-price"+r;
 				priceCellInput.className = "priceCol";
 				priceCellInput.value = this.price[r];
 				priceCellInput.size = 4;
@@ -274,6 +304,12 @@
 				this.setCount(r,parseInt(getCookie(this.name+"-count"+r)));
 			}
 		}
+		this.jsonify = function()
+		{
+			//var jsonstring = '{"'+this.name+'":{ "title": "'+this.title+'", "prices": ['+this.price+'], "counts": ['+this.count+']}}';
+			var jsonstring = '"'+this.name+'":{ "title": "'+this.title+'", "prices": ['+this.price+'], "counts": ['+this.count+']}';
+			return jsonstring;
+		}
 	}
 
 	</script>
@@ -281,7 +317,43 @@
 
 <body id="main" onLoad="createConcert()">
 	<div id="concertForm"></div>
-	<div id="concerts"></div>
+<?php
+if ($_SERVER['REQUEST_METHOD'] == 'POST')
+{
+	$datajson = ($_POST["data"]);
+	$data = json_decode($_POST["data"],true);
+	//var_dump($data);
+	echo "<pre>\n";
+	$body = '';
+	setlocale(LC_TIME, "cs_CZ");
+	$body .= strftime("Vstupne do JazzDocku za %A %d. %m. %G %R\n");
+	foreach ($data as $key => $value) {
+		$body .= $value['title'];
+		$body .= ":\n";
+		$body .= "\tCena:\tPocet:\tCelkem\n";
+		$sum = 0;
+		for ($i = 0; ($i < count($value['prices'])); $i++)
+		{
+			$body .= "\t".$value['prices'][$i];
+			$body .= "\t".$value['counts'][$i];
+			$body .= "\t".$value['counts'][$i]*$value['prices'][$i];
+			$sum += $value['counts'][$i]*$value['prices'][$i];
+			$body .= "\n";
+		}
+		$body .= "\t\tSoucet:\t$sum\n";
+	}
+	echo $body;
+	echo "</pre>";
+	$sent = mail("Petr Studeny <dosmanak@centrum.cz>",strftime("JZD Vstupne %d.%m.%G"),$body);
+	echo "Mail odeslan je $sent";
+}
+else
+{
+?>
+	  <div id="concerts"></div>
+<?php
+}
+?>
 	<div id="eraser">
 		<input type="button" value="Resetovat stránku" onclick="deleteAllCookies()"/>
 	</div>
