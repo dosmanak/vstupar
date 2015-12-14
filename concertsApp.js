@@ -130,14 +130,16 @@ function Evening(id)
 	}
 
 	// Go through concerts go generate json to send to server
-	this.data = 'data={';
-	for (var i=0; i < this.concerts.length; i++)
-	{
-		if ( i > 0 ) this.data+= ',';
-		this.data += this.concerts[i].jsonify();
+	this.prepareData = function(){
+		var data = 'data={';
+		for (var i=0; i < that.concerts.length; i++)
+		{
+			if ( i > 0 ) data+= ',';
+			data += that.concerts[i].jsonify();
+		}
+		data += '}';
+		return data;
 	}
-	this.data += '}';
-	var that = this;
 
 	var sendto = document.createElement("input");
 	sendto.type = "text";
@@ -151,7 +153,7 @@ function Evening(id)
 	send.onclick = function () 
 	{ 
 		var to = document.getElementById("SendMailTo").value;
-		var data = 'mailto='+to+'\&'+that.data;
+		var data = 'mailto='+to+'\&'+that.prepareData();
 		sendConcertsData(data); 
 	};
 	send.value = "Odeslat e-mail";
