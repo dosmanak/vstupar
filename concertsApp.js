@@ -71,7 +71,7 @@ function Evening(id)
 	this.defaultTitle = function()
 	{
 		d = new Date();
-		return "Koncert "+d.getDate()+". "+d.getMonth()+"., "+d.getHours()+"h";
+		return "Koncert "+d.getDate()+". "+(d.getMonth()+1)+"., "+d.getHours()+"h";
 	}
 	this.formTitle = document.createElement("input");
 	this.formTitle.type = 'text';
@@ -113,7 +113,7 @@ function Evening(id)
 	{
 		var formValues = that.getConcertValues();
 		var co = new Concert ( formValues['title'],formValues['rows'] );
-		that.concerts.unshift( co );
+		that.concerts.push( co );
 		that.htmlObject.appendChild(co.drawTable()); 
 	}
 	this.htmlObject.appendChild(this.formTitle);
@@ -333,7 +333,6 @@ function Concert(_name,_rows)
 		/* fill from cookie */
 		for (r=0; r < this.rows; r++){
 			var priceRow = parseInt(getCookie(this.name+"-price"+r));
-			if (priceRow == 0) { priceRow = 50*r; }
 			this.setPrice(r,priceRow);
 			this.setCount(r,parseInt(getCookie(this.name+"-count"+r)));
 		}
