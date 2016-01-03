@@ -146,7 +146,7 @@ function Evening(id)
 	sendto.id = "SendMailTo";
 	//sendto.value = "info@jazzdock.cz";
 	sendto.value = "dosmanak@centrum.cz";
-	document.getElementById('resetCookies').appendChild(sendto);
+	document.getElementById('sendMail').appendChild(sendto);
 	var send = document.createElement("input");
 	send.type = "button";
 	send.class = "SendMail";
@@ -157,7 +157,7 @@ function Evening(id)
 		sendConcertsData(data); 
 	};
 	send.value = "Odeslat e-mail";
-	document.getElementById('resetCookies').appendChild(send);
+	document.getElementById('sendMail').appendChild(send);
 
 	console.log(getCookiesContaining("title"));
 	var resetButton = document.createElement("input");
@@ -204,7 +204,7 @@ function Concert(_name,_rows)
 	this.price = new Array(this.rows);
 	this.count = new Array(this.rows);
 	for (var i=0; i < this.rows; i++) {
-		this.price[i]=0;
+		this.price[i]=150;
 		this.count[i]=0;
 	}
 	this.setPrice = function(row, price)
@@ -333,6 +333,7 @@ function Concert(_name,_rows)
 		/* fill from cookie */
 		for (r=0; r < this.rows; r++){
 			var priceRow = parseInt(getCookie(this.name+"-price"+r));
+			if (priceRow == 0) priceRow = 150;
 			this.setPrice(r,priceRow);
 			this.setCount(r,parseInt(getCookie(this.name+"-count"+r)));
 		}
