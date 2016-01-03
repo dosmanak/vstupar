@@ -74,7 +74,7 @@ function Evening(id)
 	this.defaultTitle = function()
 	{
 		d = new Date();
-		return "Koncert "+d.getDate()+". "+(d.getMonth()+1)+"., "+d.getHours()+"h";
+		return "Koncert "+d.getDate()+". "+(d.getMonth()+1)+"., "+(d.getHours()+1)+"h";
 	}
 	this.formTitle = document.createElement("input");
 	this.formTitle.type = 'text';
@@ -165,8 +165,7 @@ function Evening(id)
 	var sendto = document.createElement("input");
 	sendto.type = "text";
 	sendto.id = "SendMailTo";
-	//sendto.value = "info@jazzdock.cz";
-	sendto.value = "dosmanak@centrum.cz";
+	sendto.value = "provoz@jazzdock.cz";
 	document.getElementById('sendMail').appendChild(sendto);
 	var send = document.createElement("input");
 	send.type = "button";
@@ -191,7 +190,7 @@ function Evening(id)
 function sendConcertsData(data)
 {
 	var xhttp = new XMLHttpRequest();
-	xhttp.open("POST", "vstupar.php", true);
+	xhttp.open("POST", "index.php", true);
 	xhttp.onreadystatechange = function() {
 		if (xhttp.readyState == 4 && xhttp.status == 200) {
 			document.write(xhttp.responseText);
