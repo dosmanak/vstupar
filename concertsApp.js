@@ -5,7 +5,9 @@
 //  Author: Petr Studeny <dosmanak@centrum.cz>
 //  Version: 0.9
 //
-String.prototype.hashCode = function(){
+
+// GLOBAL functions
+String.prototype.hashCode = function() {
 	var hash = 0;
 	if (this.length == 0) return hash;
 	for (i = 0; i < this.length; i++) {
@@ -16,8 +18,7 @@ String.prototype.hashCode = function(){
 	return hash;
 }
 
-function setCookie(name, value)
-{
+function setCookie(name, value) {
 	/* dont ask for expiration in argument, use fix value */
 	days = 2
 	var date = new Date();
@@ -48,8 +49,7 @@ function getCookiesContaining(cname) {
 				}
 				return values;
 }
-function deleteAllCookies() 
-{
+function deleteAllCookies() {
 	var cookies = document.cookie.split(";");
 
 	for (var i = 0; i < cookies.length; i++) {
@@ -60,8 +60,7 @@ function deleteAllCookies()
 	}
 	window.location.reload(false);
 }
-function slugify(text)
-{
+function slugify(text) {
 	return text.toString().toLowerCase()
 	.replace(/\s+/g, '_')           // Replace spaces with _
 	.replace(/[^\w\-]+/g, '')       // Remove all non-word chars
@@ -71,19 +70,39 @@ function slugify(text)
 	.replace(/-+$/, '');            // Trim - from end of text
 }
 
+
+function sendJsonAJAX(data) {
+	var xhttp = new XMLHttpRequest();
+	xhttp.open("POST", "index.php", true);
+	xhttp.onreadystatechange = function() {
+		if (xhttp.readyState == 4 && xhttp.status == 200) {
+			document.write(xhttp.responseText);
+		}
+	}
+	xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+	xhttp.send(data);
+}
 //
 // Object Evening
-//
-function Evening(id)
-{
+/*  htmlobject - hold root html object
+ *  formTitle -\
+ *  formRows    +- form to generate new concert
+ *  formButton-/
+ *  concerts - array to hold all concerts of class Concert
+ *  sumAllConcerts() - sum total price of all concerts in conterts variable
+ *
+ *  eveningTotal - Display button to call sumAllConcerts and display it -\
+ *  sendto			 - Form to fill e-mail address and button to send data   +- handle html elements outside of root html object
+ *  resetButton	 - Button to reset cookies i.e. clear the page          -/
+ */
+function Evening(id) {
 	this.htmlObject = document.getElementById(id);
-	if (! this.htmlObject ) 
-	{
+	this.concerts = new Array();
+	if (! this.htmlObject )  {
 		console.log('wrong html id used creating Evening');
 		return null;
 	}
-	this.defaultTitle = function()
-	{
+	this.defaultTitle = function() {
 		d = new Date();
 		return "Koncert "+d.getDate()+". "+(d.getMonth()+1)+"., "+(d.getHours()+1)+"h";
 	}
@@ -97,10 +116,20 @@ function Evening(id)
 	this.formRows.id = 'formRows';
 	this.formRows.value = 4;
 
-	this.concerts = new Array();
+	this.formButton = document.createElement("input");
+	this.formButton.type = 'button';
+	this.formButton.id = 'formButton';
+	this.formButton.value = 'Přidej';
+	var that = this;
+	this.formButton.onclick = function() {
+		var formValues = that.getFormValues();
+		var co = new Concert ( formValues['title'],formValues['rows'] );
+		that.concerts.push( co );
+		that.htmlObject.appendChild(co.drawTable()); 
+	}
 
-	this.getConcertValues = function()
-	{
+
+	this.getFormValues = function() {
 		var tuple = new Array();
 		var elem = document.getElementById('formTitle');
 		if ( ! elem ) 
@@ -118,31 +147,18 @@ function Evening(id)
 		tuple['rows'] = elem.value;
 		return tuple;
 	}
-	this.formButton = document.createElement("input");
-	this.formButton.type = 'button';
-	this.formButton.id = 'formButton';
-	this.formButton.value = 'Přidej';
-	var that = this;
-	this.formButton.onclick = function()
-	{
-		var formValues = that.getConcertValues();
-		var co = new Concert ( formValues['title'],formValues['rows'] );
-		that.concerts.push( co );
-		that.htmlObject.appendChild(co.drawTable()); 
-	}
 	this.htmlObject.appendChild(this.formTitle);
 	this.htmlObject.appendChild(this.formRows);
 	this.htmlObject.appendChild(this.formButton);
 	// That was just the beggingin, now try to search cookies for existing Concerts
 	var titlesCookie = getCookiesContaining("title");
 	var rowsCookie = getCookiesContaining("rows");
-	while (c = titlesCookie.shift())
-	{
+	while (c = titlesCookie.shift()) {
 		this.concerts.push(new Concert(c, rowsCookie.shift()));
 		this.htmlObject.appendChild( concerts[concerts.length - 1].drawTable());
 		this.concerts[concerts.length - 1].loadCookies();
 	}
-	this.sumAllConcerts = function(){
+	this.sumAllConcerts = function() {
 		var sum = 0;
 		for (var i=0; i < that.concerts.length; i++)
 		{
@@ -152,7 +168,7 @@ function Evening(id)
 	}
 
 	// Go through concerts go generate json to send to server
-	this.prepareData = function(){
+	this.prepareData = function() {
 		var data = 'data={';
 		for (var i=0; i < that.concerts.length; i++)
 		{
@@ -181,11 +197,10 @@ function Evening(id)
 	var send = document.createElement("input");
 	send.type = "button";
 	send.class = "SendMail";
-	send.onclick = function () 
-	{ 
+	send.onclick = function ()  { 
 		var to = document.getElementById("SendMailTo").value;
 		var data = 'mailto='+to+'\&'+that.prepareData();
-		sendConcertsData(data); 
+		sendJsonAJAX(data); 
 	};
 	send.value = "Odeslat e-mail";
 	document.getElementById('sendMail').appendChild(send);
@@ -197,19 +212,7 @@ function Evening(id)
 	resetButton.onclick = function() { deleteAllCookies(); }
 	document.getElementById('resetCookies').appendChild(resetButton);
 }
-
-function sendConcertsData(data)
-{
-	var xhttp = new XMLHttpRequest();
-	xhttp.open("POST", "index.php", true);
-	xhttp.onreadystatechange = function() {
-		if (xhttp.readyState == 4 && xhttp.status == 200) {
-			document.write(xhttp.responseText);
-		}
-	}
-	xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-	xhttp.send(data);
-}
+// END Object Evening
 
 /***
 ** Object concert:
@@ -225,8 +228,7 @@ function sendConcertsData(data)
 **   new Concert(name,rows) - draw table with buttons and correct variables in it.
 **     create one concert with given name and rows.
 ***/
-function Concert(_name,_rows)
-{
+function Concert(_name,_rows) {
 	this.title = _name;
 	this.hash = this.title.hashCode();
 	this.rows = _rows;
@@ -238,8 +240,7 @@ function Concert(_name,_rows)
 		this.price[i]=150;
 		this.count[i]=0;
 	}
-	this.setPrice = function(row, price)
-	{
+	this.setPrice = function(row, price) {
 		if (isNaN(price)) { alert ("wrong call to setPrice"); return;};
 		this.price[row] = price;
 		//console.log(this.hash+"-price"+row);
@@ -249,8 +250,7 @@ function Concert(_name,_rows)
 		document.getElementById(this.hash+"-totalPrice").innerHTML = this.getTotalPrice();
 		setCookie(this.hash+"-price"+row, price);
 	}
-	this.setCount = function(row, count)
-	{
+	this.setCount = function(row, count) {
 		if (isNaN(count)) { alert ("wrong call to setCount"); return;};
 		this.count[row] = count;
 		document.getElementById(this.hash+"-count"+row).innerHTML = this.count[row];
@@ -259,12 +259,10 @@ function Concert(_name,_rows)
 		document.getElementById(this.hash+"-totalCount").innerHTML = this.getTotalCount();
 		setCookie(this.hash+"-count"+row, count);
 	}
-	this.sumPrice = function(row)
-	{
+	this.sumPrice = function(row) {
 		return this.price[row]*this.count[row];
 	}
-	this.getTotalPrice = function()
-	{
+	this.getTotalPrice = function() {
 		var totalPrice = 0;
 		for (var i=0;i<this.rows;i++)
 		{
@@ -273,8 +271,7 @@ function Concert(_name,_rows)
 		return totalPrice;	
 	}
 	
-	this.getTotalCount = function()
-	{
+	this.getTotalCount = function() {
 		var totalCount = 0;
 		for (var i=0;i<this.rows;i++)
 		{
@@ -283,11 +280,10 @@ function Concert(_name,_rows)
 		return totalCount;
 	}
 	
-	this.changeValBut = function(row,val){
+	this.changeValBut = function(row,val) {
 		this.setCount(row,this.count[row] + val);
 	}
-	this.drawButton = function(row,val)
-	{
+	this.drawButton = function(row,val) {
 		var input = document.createElement("input");
 		input.type = "button";
 		input.id = row+this.hash+val;
@@ -300,8 +296,7 @@ function Concert(_name,_rows)
 		input.onclick = function() { that.changeValBut(row,val); }
 		return input;
 	}
-	this.drawTable = function()
-	{
+	this.drawTable = function() {
 		var envelope = document.createElement("div");
 		envelope.id = this.hash;
 		var title = document.createElement("h2");
@@ -316,8 +311,8 @@ function Concert(_name,_rows)
 		hsumPrice.innerHTML = "<b>Součet</b>";
 		var hprice = th.insertCell(-1);
 		hprice.innerHTML = "<b>Cena</b>";
-		for (c=0; c < 4; c++){th.insertCell(-1);};
-		for (r=0; r < this.rows; r++){
+		for (c=0; c < 4; c++) {th.insertCell(-1);};
+		for (r=0; r < this.rows; r++) {
 			var tr = feeTable.insertRow(-1);
 			var countCell = tr.insertCell(-1);
 			countCell.id = this.hash+"-count"+r;
@@ -337,7 +332,7 @@ function Concert(_name,_rows)
 			console.log("init: ",r);
 			//this.r = r;				
 			var that = this;
-			priceCellInput.onblur = function(){
+			priceCellInput.onblur = function() {
 				var roww = this.id.replace(/.*-price/, "");
 				that.setPrice(roww, this.value);
 			}
@@ -359,18 +354,16 @@ function Concert(_name,_rows)
 		
 		return envelope;
 	}
-	this.loadCookies = function()
-	{
+	this.loadCookies = function() {
 		/* fill from cookie */
-		for (r=0; r < this.rows; r++){
+		for (r=0; r < this.rows; r++) {
 			var priceRow = parseInt(getCookie(this.hash+"-price"+r));
 			if (priceRow == 0) priceRow = 150;
 			this.setPrice(r,priceRow);
 			this.setCount(r,parseInt(getCookie(this.hash+"-count"+r)));
 		}
 	}
-	this.jsonify = function()
-	{
+	this.jsonify = function() {
 		//var jsonstring = '{"'+this.hash+'":{ "title": "'+this.title+'", "prices": ['+this.price+'], "counts": ['+this.count+']}}';
 		var jsonstring = '"'+this.hash+'":{ "title": "'+encodeURIComponent(this.title)+'", "prices": ['+this.price+'], "counts": ['+this.count+']}';
 		return jsonstring;
