@@ -11,7 +11,9 @@ function setCookie(name, value)
 	var date = new Date();
 	date.setTime(date.getTime()+days*24*60*60*1000); 
 	var expires = "; expires=" + date.toGMTString();
-	document.cookie = name+"=" + value+expires + ";path=/"; 
+	var filepath = location.pathname;
+	var path = filepath.substring(0, filepath.lastIndexOf('/'));
+	document.cookie = name+"=" + value+expires + "; path="+path; 
 }
 function getCookie(cname) {
 				var name = cname + "=";
