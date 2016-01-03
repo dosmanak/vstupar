@@ -29,21 +29,7 @@
 	<title>Vstupařův průvodce večerem</title>
 	<meta http-equiv="content-type" content="text/html;charset=utf-8" />
 	<meta content='width=device-width, initial-scale=0.7, maximum-scale=0.9, user-scalable=0' name='viewport' />
-	<style type="text/css">
-		body { font-family: Helvetica }
-		#concerts { padding: 2%; }
-		#concerts table { width: 100%; font-size: 230%; table-layout: fixed}
-		.tableHeader {font-size: 60% }
-		#concerts tr { line-height: 200%; margin: 50px;}
-		#concerts td { width: 15% }
-		.priceCol { height: 80%; width: 90%; font-size: 60%}
-		.modifier { height: 100%; width: 100%; font-size: 60%}
-		/*
-		.modifier-2 { background-color: red}
-		.modifier6 { background-color: green}
-		*/
-		#eraser input{ font-size: 150%; line-height: 150% }
-	</style>
+	<link rel="stylesheet" href="style.css" type="text/css">
 	<script src="concertsApp.js" type="text/javascript"></script>
 </head>
 
@@ -67,11 +53,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
 		$sum = 0;
 		for ($i = 0; ($i < count($value['prices'])); $i++)
 		{
-			$body .= "\t".$value['prices'][$i];
-			$body .= "\t".$value['counts'][$i];
-			$body .= "\t".$value['counts'][$i]*$value['prices'][$i];
-			$sum += $value['counts'][$i]*$value['prices'][$i];
-			$body .= "\n";
+			if ($value['counts'][$i] != 0)
+			{
+				$body .= "\t".$value['prices'][$i];
+				$body .= "\t".$value['counts'][$i];
+				$body .= "\t".$value['counts'][$i]*$value['prices'][$i];
+				$sum += $value['counts'][$i]*$value['prices'][$i];
+				$body .= "\n";
+			}
 		}
 		$body .= "\t\tSoučet:\t$sum\n";
 		$total += $sum;
@@ -80,14 +69,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
 	$body .= '</pre>';
 	echo $body;
 	$to = ($_POST["mailto"]);
-	$headers  = 'MIME-Version: 1.0' . "\r\n";
-	$headers .= 'Content-type: text/html; charset=utf-8' . "\r\n";
-	$headers .= 'From: =?utf-8?Q?Vstupa=C5=99=20JZD?= <vstupar@jazztecetera.cz>'. "\r\n";
-	if( mail($to, 'JZD Vstupné '.strftime('%d.%m.%G'), $body, $headers) ) 
+	if (filter_var($to, FILTER_VALIDATE_EMAIL)) 
 	{
-      echo 'E-mail byl odeslán.';
-  }else{
+		$headers  = 'MIME-Version: 1.0' . "\r\n";
+		$headers .= 'Content-type: text/html; charset=utf-8' . "\r\n";
+		$headers .= 'From: =?utf-8?Q?Vstupa=C5=99=20JZD?= <vstupar@jazztecetera.cz>'. "\r\n";
+		if ( mail($to, 'JZD Vstupné '.strftime('%d.%m.%G'), $body, $headers) ) 
+		{
+				echo 'E-mail byl odeslán.';
+		} else {
   	  echo 'E-mail nebyl odeslán';
+  	}
+	} else {
+  	  echo 'E-mailová adresa není ve správném formátu.';
   }
 	//$to = "Petr Studeny <dosmanak@centrum.cz>";
 //dos 	$mail = new PHPMailer;
@@ -107,8 +101,11 @@ else
 }
 ?>
 </div>
+<div class="footer">
+<div id="eveningTotal"></div>
 <div id="sendMail"></div>
 <div id="resetCookies"></div>
+</div>
 </body>
 
 </html>

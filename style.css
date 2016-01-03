@@ -1,0 +1,16 @@
+		body { font-family: Helvetica;  }
+		#concerts, .footer { padding: 2%; }
+		#concerts table { width: 100%; font-size: 230%; table-layout: fixed}
+		.tableHeader {font-size: 60% }
+		#concerts tr { line-height: 200%; margin: 50px;}
+		#concerts td { width: 15% }
+		input#formRows { width: 3em; }
+		.priceCol { height: 80%; width: 90%; font-size: 60%}
+		.modifier { height: 100%; width: 100%; font-size: 60%}
+		/**/
+		.modifier-1 { background-color: #cc8033}
+		.modifier1 { background-color: #80cc33}
+		.modifier2 { background-color: #59cc33}
+		.modifier4 { background-color: #33cf33}
+		/**/
+		#eraser input{ font-size: 150%; line-height: 150% }
