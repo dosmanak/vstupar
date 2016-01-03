@@ -5,6 +5,17 @@
 //  Author: Petr Studeny <dosmanak@centrum.cz>
 //  Version: 0.9
 //
+String.prototype.hashCode = function(){
+	var hash = 0;
+	if (this.length == 0) return hash;
+	for (i = 0; i < this.length; i++) {
+		char = this.charCodeAt(i);
+		hash = ((hash<<5)-hash)+char;
+		hash = hash & hash; // Convert to 32bit integer
+	}
+	return hash;
+}
+
 function setCookie(name, value)
 {
 	/* dont ask for expiration in argument, use fix value */
@@ -217,10 +228,10 @@ function sendConcertsData(data)
 function Concert(_name,_rows)
 {
 	this.title = _name;
-	this.name = slugify(_name);
+	this.hash = this.title.hashCode();
 	this.rows = _rows;
-	setCookie(this.name+"-title", this.title); // to be able to recreate from cookies
-	setCookie(this.name+"-rows", this.rows);
+	setCookie(this.hash+"-title", this.title); // to be able to recreate from cookies
+	setCookie(this.hash+"-rows", this.rows);
 	this.price = new Array(this.rows);
 	this.count = new Array(this.rows);
 	for (var i=0; i < this.rows; i++) {
@@ -231,22 +242,22 @@ function Concert(_name,_rows)
 	{
 		if (isNaN(price)) { alert ("wrong call to setPrice"); return;};
 		this.price[row] = price;
-		//console.log(this.name+"-price"+row);
-		//console.log(document.getElementById(this.name+"-price"+row));
-		document.getElementById(this.name+"-price"+row).value = price;
-		document.getElementById(this.name+"-sumPrice"+row).innerHTML = this.sumPrice(row);
-		document.getElementById(this.name+"-totalPrice").innerHTML = this.getTotalPrice();
-		setCookie(this.name+"-price"+row, price);
+		//console.log(this.hash+"-price"+row);
+		//console.log(document.getElementById(this.hash+"-price"+row));
+		document.getElementById(this.hash+"-price"+row).value = price;
+		document.getElementById(this.hash+"-sumPrice"+row).innerHTML = this.sumPrice(row);
+		document.getElementById(this.hash+"-totalPrice").innerHTML = this.getTotalPrice();
+		setCookie(this.hash+"-price"+row, price);
 	}
 	this.setCount = function(row, count)
 	{
 		if (isNaN(count)) { alert ("wrong call to setCount"); return;};
 		this.count[row] = count;
-		document.getElementById(this.name+"-count"+row).innerHTML = this.count[row];
-		document.getElementById(this.name+"-sumPrice"+row).innerHTML = this.sumPrice(row);
-		document.getElementById(this.name+"-totalPrice").innerHTML = this.getTotalPrice();
-		document.getElementById(this.name+"-totalCount").innerHTML = this.getTotalCount();
-		setCookie(this.name+"-count"+row, count);
+		document.getElementById(this.hash+"-count"+row).innerHTML = this.count[row];
+		document.getElementById(this.hash+"-sumPrice"+row).innerHTML = this.sumPrice(row);
+		document.getElementById(this.hash+"-totalPrice").innerHTML = this.getTotalPrice();
+		document.getElementById(this.hash+"-totalCount").innerHTML = this.getTotalCount();
+		setCookie(this.hash+"-count"+row, count);
 	}
 	this.sumPrice = function(row)
 	{
@@ -279,12 +290,12 @@ function Concert(_name,_rows)
 	{
 		var input = document.createElement("input");
 		input.type = "button";
-		input.id = row+this.name+val;
+		input.id = row+this.hash+val;
 		var label = val.toString();
 		if (label.charAt(0) != "-") { label = "+"+label; };
 		input.className = "modifier modifier"+val;
 		input.value = label;
-		//console.log("this, pri incializaci buttonu: ",this.name);
+		//console.log("this, pri incializaci buttonu: ",this.hash);
 		var that = this;
 		input.onclick = function() { that.changeValBut(row,val); }
 		return input;
@@ -292,9 +303,9 @@ function Concert(_name,_rows)
 	this.drawTable = function()
 	{
 		var envelope = document.createElement("div");
-		envelope.id = this.name;
+		envelope.id = this.hash;
 		var title = document.createElement("h2");
-		title.name = this.title;
+		title.hash = this.title;
 		title.innerHTML = this.title;
 		var feeTable = document.createElement("table");
 		var th = feeTable.insertRow(-1);
@@ -309,17 +320,17 @@ function Concert(_name,_rows)
 		for (r=0; r < this.rows; r++){
 			var tr = feeTable.insertRow(-1);
 			var countCell = tr.insertCell(-1);
-			countCell.id = this.name+"-count"+r;
-			countCell.name = this.name+"-count"+r;
+			countCell.id = this.hash+"-count"+r;
+			countCell.hash = this.hash+"-count"+r;
 			countCell.innerHTML = this.count[r];
 			var sumPriceCell = tr.insertCell(-1);
-			sumPriceCell.id = this.name+"-sumPrice"+r;
+			sumPriceCell.id = this.hash+"-sumPrice"+r;
 			sumPriceCell.innerHTML = this.sumPrice(r);
 			var priceCell = tr.insertCell(-1);
 			var priceCellInput = document.createElement("input");
 			priceCellInput.type = "number";
-			priceCellInput.id = this.name+"-price"+r;
-			priceCellInput.name = this.name+"-price"+r;
+			priceCellInput.id = this.hash+"-price"+r;
+			priceCellInput.hash = this.hash+"-price"+r;
 			priceCellInput.className = "priceCol";
 			priceCellInput.value = this.price[r];
 			priceCellInput.size = 4;
@@ -340,8 +351,8 @@ function Concert(_name,_rows)
 			console.log("Processing row "+r);
 		}
 		var sumTotaltr = feeTable.insertRow(-1);
-		sumTotaltr.innerHTML='<td id="'+this.name+'-totalCount">0</td>\
-		<td id="'+this.name+'-totalPrice">0</td><td colspan="5">⇐Celkem</td>';
+		sumTotaltr.innerHTML='<td id="'+this.hash+'-totalCount">0</td>\
+		<td id="'+this.hash+'-totalPrice">0</td><td colspan="5">⇐Celkem</td>';
 		
 		envelope.appendChild(title);
 		envelope.appendChild(feeTable);
@@ -352,16 +363,16 @@ function Concert(_name,_rows)
 	{
 		/* fill from cookie */
 		for (r=0; r < this.rows; r++){
-			var priceRow = parseInt(getCookie(this.name+"-price"+r));
+			var priceRow = parseInt(getCookie(this.hash+"-price"+r));
 			if (priceRow == 0) priceRow = 150;
 			this.setPrice(r,priceRow);
-			this.setCount(r,parseInt(getCookie(this.name+"-count"+r)));
+			this.setCount(r,parseInt(getCookie(this.hash+"-count"+r)));
 		}
 	}
 	this.jsonify = function()
 	{
-		//var jsonstring = '{"'+this.name+'":{ "title": "'+this.title+'", "prices": ['+this.price+'], "counts": ['+this.count+']}}';
-		var jsonstring = '"'+this.name+'":{ "title": "'+encodeURIComponent(this.title)+'", "prices": ['+this.price+'], "counts": ['+this.count+']}';
+		//var jsonstring = '{"'+this.hash+'":{ "title": "'+this.title+'", "prices": ['+this.price+'], "counts": ['+this.count+']}}';
+		var jsonstring = '"'+this.hash+'":{ "title": "'+encodeURIComponent(this.title)+'", "prices": ['+this.price+'], "counts": ['+this.count+']}';
 		return jsonstring;
 	}
 }
