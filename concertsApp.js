@@ -128,6 +128,14 @@ function Evening(id)
 		this.htmlObject.appendChild( concerts[concerts.length - 1].drawTable());
 		this.concerts[concerts.length - 1].loadCookies();
 	}
+	this.sumAllConcerts = function(){
+		var sum = 0;
+		for (var i=0; i < that.concerts.length; i++)
+		{
+			sum += that.concerts[i].getTotalPrice();
+		}
+		return sum;
+	}
 
 	// Go through concerts go generate json to send to server
 	this.prepareData = function(){
@@ -140,6 +148,16 @@ function Evening(id)
 		data += '}';
 		return data;
 	}
+	var eveningTotalVal = document.createElement("span");
+	eveningTotalVal.id = "eveningTotalVal";
+	var eveningTotalButton = document.createElement("input");
+	eveningTotalButton.type = "button";
+	eveningTotalButton.value = "Aktualizuj příjmy za dnešní večer";
+	eveningTotalButton.onclick = function() { document.getElementById("eveningTotalVal").innerHTML = " "+that.sumAllConcerts()+" Kč"; }
+	var eveningTotal = document.getElementById("eveningTotal");
+	eveningTotal.appendChild(eveningTotalButton);
+	eveningTotal.appendChild(eveningTotalVal);
+
 
 	var sendto = document.createElement("input");
 	sendto.type = "text";
