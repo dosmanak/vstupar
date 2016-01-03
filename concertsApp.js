@@ -3,6 +3,7 @@
 //  There is more helper functions, maybe TODO object
 //
 //  Author: Petr Studeny <dosmanak@centrum.cz>
+//  Version: 0.9
 //
 function setCookie(name, value)
 {

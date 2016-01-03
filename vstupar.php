@@ -1,5 +1,6 @@
 <!--
-   vstupar.php
+	 vstupar.php
+	 Version: 0.9
    
    Copyright 2015 Petr Studený <dosmanak@centrum.cz>
    
